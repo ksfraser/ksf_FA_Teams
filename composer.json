@@ -1,0 +1,9 @@
+{
+    "name": "ksfraser/ksf_fa_teams",
+    "description": "FA module - Teams",
+    "type": "fa-module",
+    "require": {
+        "ksfraser/ksf_Teams": "*",
+        "ksfraser/composerdendencymanager": "*"
+    }
+}
