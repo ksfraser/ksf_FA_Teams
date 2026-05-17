@@ -1,107 +1,120 @@
 <?php
 /**
- * FA_Teams Module Hooks for FrontAccounting
+ * KSF FrontAccounting Module Hooks
+ * 
+ * STANDARD PATTERNS:
+ * 
+ * 1. ADDING MODULE TABS
+ *    Define a class extending 'application' in hooks.php.
+ *    Return new instance from install_tabs().
+ *    Include add_extensions() to load other modules' install_options.
+ * 
+ * 2. ADDING MENU ITEMS TO EXISTING APPS
+ *    Use install_options() with switch($app->id).
+ *    Use add_module() + add_lapp_function() for new menu section.
+ * 
+ * 3. DATABASE SCHEMA
+ *    DO NOT create tables in PHP code.
+ *    Use sql/install.sql with @TB_PREF@ placeholders.
+ *    Call $this->update_databases() in activate_extension().
+ * 
+ * 4. SECURITY
+ *    Define SS_<MODULE> constant (section << 8).
+ *    Define SA_<MODULE>VIEW and SA_<MODULE>MANAGE in install_access().
+ * 
+ * @package KsfFA_ksf_FA_Teams
+ * @version 2.4.3
  */
 
-define('SS_TEAMS', 137 << 8);
+define('SS_ksf_FA_Teams', 138 << 8);
 
 class hooks_ksf_FA_Teams extends hooks {
     var $module_name = 'ksf_FA_Teams';
-    var $version = '2.4.0';
+    var $version = '1.0.0';
 
-    function install_options($app) {
-        global $path_to_root;
-
-        switch($app->id) {
-            case 'HR':
-                $app->add_lapp_function(0, _("Teams"),
-                    $path_to_root."/modules/".$this->module_name."/teams.php", 'SA_TEAMSVIEW', MENU_ENTRY);
-                $app->add_lapp_function(1, _("Create Team"),
-                    $path_to_root."/modules/".$this->module_name."/create.php", 'SA_TEAMSCREATE', MENU_ENTRY);
-                $app->add_lapp_function(2, _("Team Members"),
-                    $path_to_root."/modules/".$this->module_name."/members.php", 'SA_TEAMSMANAGE', MENU_ENTRY);
-                break;
-        }
+    /**
+     * Add module tab
+     * 
+     * Return new application class instance to add a tab.
+     * Omit or return nothing to skip tab addition.
+     * 
+     * @param application|null $app Ignored
+     * @return application|null New tab application instance or nothing
+     */
+    function install_tabs($app) {
+        // Override in modules that add apps
+        // return new ksf_FA_Teams_app();
     }
 
+    /**
+     * Add menu items to existing FA applications
+     * 
+     * @param application $app FA application instance
+     */
+    function install_options($app) {
+        // Override in modules that add menu items
+    }
+
+    /**
+     * Define security areas
+     * 
+     * @return array [0] => $security_areas, [1] => $security_sections
+     */
     function install_access() {
-        $security_sections[SS_TEAMS] = _("Teams Management");
-        $security_areas['SA_TEAMSVIEW'] = array(SS_TEAMS | 1, _("View Teams"));
-        $security_areas['SA_TEAMSCREATE'] = array(SS_TEAMS | 2, _("Create Teams"));
-        $security_areas['SA_TEAMSDELETE'] = array(SS_TEAMS | 3, _("Delete Teams"));
-        $security_areas['SA_TEAMSMANAGE'] = array(SS_TEAMS | 4, _("Manage Team Members"));
+        $security_sections[SS_ksf_FA_Teams] = _("");
+        $security_areas['SA_ksf_FA_TeamsVIEW'] = array(
+            SS_ksf_FA_Teams | 1, 
+            _("View ")
+        );
+        $security_areas['SA_ksf_FA_TeamsMANAGE'] = array(
+            SS_ksf_FA_Teams | 2, 
+            _("Manage ")
+        );
         return array($security_areas, $security_sections);
     }
 
-    function install_extension($check_only=true) {
+    /**
+     * Activate extension
+     * 
+     * @param int $company Company number
+     * @param bool $check_only Only check if activation possible
+     * @return bool Success
+     */
+    function activate_extension($company, $check_only=true) {
+        $this->ensure_composer_dependencies();
+        
+        // Apply sql/install.sql using update_databases()
+        // This handles @TB_PREF@ replacement automatically
+        if (file_exists(dirname(__FILE__) . '/sql/install.sql')) {
+            $updates = array('install.sql' => array($this->module_name));
+            return $this->update_databases($company, $updates, $check_only);
+        }
+        
         return true;
     }
 
-    function install_tabs($app) {
-    }
-
-    function activate_extension($company, $check_only=true) {
-        $updates = array('sql/update.sql' => array($this->module_name));
-        $ok = $this->update_databases($company, $updates, $check_only);
-        if ($check_only || !$ok) {
-            return $ok;
+    /**
+     * Install composer dependencies if needed
+     */
+    private function ensure_composer_dependencies(): void {
+        $module_dir = dirname(__FILE__);
+        $autoload_path = $module_dir . '/vendor/autoload.php';
+        
+        if (file_exists($autoload_path)) {
+            return;
         }
-        $this->ensure_teams_schema();
-        return $ok;
-    }
-
-    private function table_exists($table) {
-        $sql = "SHOW TABLES LIKE " . db_escape($table);
-        $res = db_query($sql, 'Failed checking table existence');
-        return db_num_rows($res) > 0;
-    }
-
-    private function ensure_teams_schema() {
-        $tables = array(
-            TB_PREF . "fa_teams" => "
-                CREATE TABLE IF NOT EXISTS `" . TB_PREF . "fa_teams` (
-                    `id` INT(11) NOT NULL AUTO_INCREMENT,
-                    `name` VARCHAR(100) NOT NULL,
-                    `description` TEXT,
-                    `leader_id` VARCHAR(100) DEFAULT NULL,
-                    `is_active` TINYINT(1) DEFAULT 1,
-                    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                    PRIMARY KEY (`id`)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
-
-            TB_PREF . "fa_team_members" => "
-                CREATE TABLE IF NOT EXISTS `" . TB_PREF . "fa_team_members` (
-                    `id` INT(11) NOT NULL AUTO_INCREMENT,
-                    `team_id` INT(11) NOT NULL,
-                    `employee_id` VARCHAR(100) NOT NULL,
-                    `role` VARCHAR(50) DEFAULT 'Member',
-                    `joined_at` DATE DEFAULT NULL,
-                    `left_at` DATE DEFAULT NULL,
-                    `is_active` TINYINT(1) DEFAULT 1,
-                    PRIMARY KEY (`id`),
-                    UNIQUE KEY `idx_team_employee` (`team_id`, `employee_id`),
-                    KEY `idx_employee` (`employee_id`)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
-
-            TB_PREF . "fa_team_projects" => "
-                CREATE TABLE IF NOT EXISTS `" . TB_PREF . "fa_team_projects` (
-                    `id` INT(11) NOT NULL AUTO_INCREMENT,
-                    `team_id` INT(11) NOT NULL,
-                    `project_id` VARCHAR(20) NOT NULL,
-                    `assigned_at` DATE DEFAULT NULL,
-                    PRIMARY KEY (`id`),
-                    UNIQUE KEY `idx_team_project` (`team_id`, `project_id`)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
-        );
-
-        foreach ($tables as $table_name => $sql) {
-            db_query($sql, "Could not create Teams table: $table_name");
+        
+        $composer_path = $module_dir . '/composer.json';
+        if (!file_exists($composer_path)) {
+            return;
         }
-    }
-
-    function db_prevoid($trans_type, $trans_no) {
-        // Handle voiding if needed
+        
+        chdir($module_dir);
+        $output = [];
+        $return_code = 0;
+        exec('composer install --no-interaction --prefer-dist 2>&1', $output, $return_code);
+        if ($return_code !== 0) {
+            error_log('KSF Module: composer install failed: ' . implode("\n", $output));
+        }
     }
 }
-?>
