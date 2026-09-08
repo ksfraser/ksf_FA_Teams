@@ -113,27 +113,21 @@ class hooks_ksf_FA_Teams extends hooks {
         $autoload_path = $module_dir . '/vendor/autoload.php';
         
         if (file_exists($autoload_path)) {
-            require_once $autoload_path;
             return;
         }
         
         $composer_path = $module_dir . '/composer.json';
         if (!file_exists($composer_path)) {
-            return true; // Safe: no dependencies required
+            return;
         }
         
-        try {
-            chdir($module_dir);
-            $output = array();
-            $return_code = 0;
-            exec('composer install --no-interaction --prefer-dist 2>&1', $output, $return_code);
-            if ($return_code !== 0) {
-                error_log('KSF Teams: composer install failed (non-fatal): ' . implode("\n", $output));
-            }
-        } catch (\Exception $e) {
-            error_log('KSF Teams: composer install exception (non-fatal): ' . $e->getMessage());
+        chdir($module_dir);
+        $output = array();
+        $return_code = 0;
+        exec('composer install --no-interaction --prefer-dist 2>&1', $output, $return_code);
+        if ($return_code !== 0) {
+            error_log('KSF Module: composer install failed: ' . implode("\n", $output));
         }
-        return true; // Never fail activation
     }
 
     /**
