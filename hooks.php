@@ -28,6 +28,14 @@
 
 define('SS_ksf_FA_Teams', 138 << 8);
 
+// Shared utility: ensure Composer dependencies are installed (runs once).
+// Per AGENTS.md standard; safe non-fatal load (try/catch in ensure_composer_dependencies).
+$composerDepsPath = dirname(__DIR__) . '/ksf_FA_Common/src/Utils/ComposerDependencies.php';
+if (file_exists($composerDepsPath)) {
+    require_once $composerDepsPath;
+    \\ksfraser\\FrontAccounting\\Common\\Utils\\ComposerDependencies::ensure(__DIR__);
+}
+
 class hooks_ksf_FA_Teams extends hooks {
     var $module_name = 'ksf_FA_Teams';
     var $version = '2.4.3-0';
@@ -92,6 +100,10 @@ class hooks_ksf_FA_Teams extends hooks {
         
         return true;
     }
+    function deactivate_extension($company, $check_only=true) {
+        return true;
+    }
+
 
     /**
      * Install composer dependencies if needed
@@ -134,7 +146,72 @@ class hooks_ksf_FA_Teams extends hooks {
      *
      * @since 1.5.0
      */
-    public function emitTeamCreated(int $teamId, string $teamName, string $teamEmail = ''): void
+
+    // -------------------------------------------------------------------------
+    // Inter-Module Hook Events — called by hook_invoke_first / hook_invoke_all
+    // -------------------------------------------------------------------------
+
+    function respondToCapabilityRequest(&$data, $opts = null) {
+        $request = isset($opts['request']) ? $opts['request'] : (isset($data['request']) ? $data['request'] : 'capabilities');
+        $data['request'] = $request;
+        $data['module'] = $this->module_name;
+        switch ($request) {
+            case 'capabilities':
+                return $this->getModuleCapabilities($data, $opts);
+            case 'constants':
+                return $this->getModuleConstants($data, $opts);
+            case 'has:team_management':
+            case 'has:team_crud':
+                return $this->hasCapability($data, array('capability' => 'team_management'));
+            default:
+                $data['error'] = 'Unknown request: ' . $request;
+                return null;
+        }
+    }
+
+    /**
+     * Team event dispatcher — listens to team lifecycle events from Project module.
+     */
+    function hook_invoke_all($hook, &$data) {
+        switch ($hook) {
+            case 'team_created':
+            case 'team_updated':
+            case 'team_deleted':
+            case 'user_team_assigned':
+            case 'user_team_unassigned':
+                // These events are emitted by this module (not consumed here)
+                return null;
+            case 'user_provisioned':
+            case 'user_updated':
+            case 'user_deactivated':
+                // Consume RBAC user events for team synchronization
+                $this->handleUserEvent($hook, $data);
+                return null;
+            case 'project_template_applied':
+                // Consume Project module event; create team reference if needed
+                $this->handleProjectTemplateApplied($data);
+                return null;
+            default:
+                return null;
+        }
+    }
+
+    private function handleUserEvent(string $hook, array &$data): void {
+        $entityType = $data['entity_type'] ?? 'user';
+        $entityId = $data['entity_id'] ?? null;
+        $userId = $data['user_id'] ?? null;
+        // Team module can respond to user events (e.g., sync team membership)
+        // No-op by default; override for team synchronization logic
+    }
+
+    private function handleProjectTemplateApplied(array &$data): void {
+        $templateId = $data['template_id'] ?? null;
+        $projectId = $data['project_id'] ?? null;
+        $teamName = $data['project_name'] ?? ($data['team_name'] ?? 'Project Team');
+        // Team module can create default team for new project
+        // No-op by default; override if team auto-creation needed
+    }
+\n    public function emitTeamCreated(int $teamId, string $teamName, string $teamEmail = ''): void
     {
         $data = [
             'entity_type' => 'team',
