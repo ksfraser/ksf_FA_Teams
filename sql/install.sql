@@ -1,7 +1,7 @@
 -- Teams module database schema for FrontAccounting
 
 -- Teams table
-CREATE TABLE IF NOT EXISTS `fa_teams` (
+CREATE TABLE IF NOT EXISTS `0_ksf_teams` (
     `id` INT(11) NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(255) NOT NULL,
     `description` TEXT,
@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS `fa_teams` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Team members
-CREATE TABLE IF NOT EXISTS `fa_team_members` (
+CREATE TABLE IF NOT EXISTS `0_ksf_team_members` (
     `id` INT(11) NOT NULL AUTO_INCREMENT,
     `team_id` INT(11) NOT NULL,
     `employee_id` INT(11) NOT NULL,
@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS `fa_team_members` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Team projects
-CREATE TABLE IF NOT EXISTS `fa_team_projects` (
+CREATE TABLE IF NOT EXISTS `0_ksf_team_projects` (
     `id` INT(11) NOT NULL AUTO_INCREMENT,
     `team_id` INT(11) NOT NULL,
     `project_id` INT(11) NOT NULL,
@@ -38,6 +38,6 @@ CREATE TABLE IF NOT EXISTS `fa_team_projects` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Module version
-INSERT INTO `fa_modules` (`name`, `version`, `enabled`, `installed`) VALUES
+INSERT IGNORE INTO `0_modules_reg` (`name`, `version`, `enabled`, `installed`) VALUES
 ('Teams', '1.0.0', 1, NOW())
 ON DUPLICATE KEY UPDATE `version` = '1.0.0', `installed` = NOW();
