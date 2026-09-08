@@ -30,7 +30,7 @@ define('SS_ksf_FA_Teams', 138 << 8);
 
 class hooks_ksf_FA_Teams extends hooks {
     var $module_name = 'ksf_FA_Teams';
-    var $version = '1.0.0';
+    var $version = '2.4.3-0';
 
     /**
      * Add module tab
