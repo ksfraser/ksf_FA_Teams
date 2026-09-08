@@ -33,7 +33,7 @@ define('SS_ksf_FA_Teams', 138 << 8);
 $composerDepsPath = dirname(__DIR__) . '/ksf_FA_Common/src/Utils/ComposerDependencies.php';
 if (file_exists($composerDepsPath)) {
     require_once $composerDepsPath;
-    \\ksfraser\\FrontAccounting\\Common\\Utils\\ComposerDependencies::ensure(__DIR__);
+    \ksfraser\FrontAccounting\Common\Utils\ComposerDependencies::ensure(__DIR__);
 }
 
 class hooks_ksf_FA_Teams extends hooks {
