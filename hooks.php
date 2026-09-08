@@ -69,7 +69,7 @@ class hooks_ksf_FA_Teams extends hooks {
      * @return array [0] => $security_areas, [1] => $security_sections
      */
     function install_access() {
-        $security_sections[SS_ksf_FA_Teams] = _("Teams");
+        $security_sections[SS_ksf_FA_Teams] = _("");
         $security_areas['SA_ksf_FA_TeamsVIEW'] = array(
             SS_ksf_FA_Teams | 1, 
             _("View ")
