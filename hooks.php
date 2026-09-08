@@ -66,7 +66,13 @@ class hooks_ksf_FA_Teams extends hooks {
      * @param application $app FA application instance
      */
     function install_options($app) {
-        // Override in modules that add menu items
+        global $path_to_root;
+        // Basic menu items added per standard pattern
+        switch($app->id) {
+            case 'manuf':
+            case 'setup':
+                break;
+        }
     }
 
     /**
@@ -107,6 +113,12 @@ class hooks_ksf_FA_Teams extends hooks {
         return true;
     }
     function deactivate_extension($company, $check_only=true) {
+        if (!$check_only) {
+            // Unregister any team-related contact types if registered
+            if (class_exists('\\ksfraser\\FrontAccounting\\Common\\ContactType\\ContactTypeRegistry')) {
+                \ksfraser\FrontAccounting\Common\ContactType\ContactTypeRegistry::unregisterModule('ksf_FA_Teams');
+            }
+        }
         return true;
     }
 
@@ -114,13 +126,32 @@ class hooks_ksf_FA_Teams extends hooks {
     /**
      * Install composer dependencies if needed
      */
-    private function ensure_composer_dependencies() {
+    private function ensure_composer_dependencies(): void {
         $module_dir = dirname(__FILE__);
         $autoload_path = $module_dir . '/vendor/autoload.php';
         
         if (file_exists($autoload_path)) {
+            require_once $autoload_path;
             return;
         }
+        
+        $composer_path = $module_dir . '/composer.json';
+        if (!file_exists($composer_path)) {
+            return;
+        }
+        
+        try {
+            chdir($module_dir);
+            $output = [];
+            $return_code = 0;
+            exec('composer install --no-interaction --prefer-dist 2>&1', $output, $return_code);
+            if ($return_code !== 0) {
+                error_log('KSF Teams: composer install failed: ' . implode("\n", $output));
+            }
+        } catch (\Exception $e) {
+            error_log('KSF Teams: composer install exception: ' . $e->getMessage());
+        }
+    }
         
         $composer_path = $module_dir . '/composer.json';
         if (!file_exists($composer_path)) {
