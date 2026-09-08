@@ -117,4 +117,111 @@ class hooks_ksf_FA_Teams extends hooks {
             error_log('KSF Module: composer install failed: ' . implode("\n", $output));
         }
     }
+
+    /**
+     * Emit team_created hook for GPG key management.
+     *
+     * @param int $teamId
+     * @param string $teamName
+     * @param string $teamEmail
+     * @return void
+     *
+     * @since 1.5.0
+     */
+    public function emitTeamCreated(int $teamId, string $teamName, string $teamEmail = ''): void
+    {
+        $data = [
+            'entity_type' => 'team',
+            'entity_id' => 'team_' . $teamId,
+            'team_id' => $teamId,
+            'team_name' => $teamName,
+            'team_email' => $teamEmail ?: 'team-' . $teamId . '@company.com',
+        ];
+
+        hook_invoke_all('team_created', $data);
+    }
+
+    /**
+     * Emit team_updated hook.
+     *
+     * @param int $teamId
+     * @param array $changes
+     * @return void
+     *
+     * @since 1.5.0
+     */
+    public function emitTeamUpdated(int $teamId, array $changes = []): void
+    {
+        $data = [
+            'entity_type' => 'team',
+            'entity_id' => 'team_' . $teamId,
+            'team_id' => $teamId,
+            'changes' => $changes,
+        ];
+
+        hook_invoke_all('team_updated', $data);
+    }
+
+    /**
+     * Emit team_deleted hook.
+     *
+     * @param int $teamId
+     * @return void
+     *
+     * @since 1.5.0
+     */
+    public function emitTeamDeleted(int $teamId): void
+    {
+        $data = [
+            'entity_type' => 'team',
+            'entity_id' => 'team_' . $teamId,
+            'team_id' => $teamId,
+        ];
+
+        hook_invoke_all('team_deleted', $data);
+    }
+
+    /**
+     * Emit user_team_assigned hook.
+     *
+     * @param int $userId
+     * @param int $teamId
+     * @param string $role
+     * @return void
+     *
+     * @since 1.5.0
+     */
+    public function emitUserTeamAssigned(int $userId, int $teamId, string $role = ''): void
+    {
+        $data = [
+            'user_id' => $userId,
+            'team_id' => $teamId,
+            'entity_type' => 'team',
+            'entity_id' => 'team_' . $teamId,
+            'role' => $role,
+        ];
+
+        hook_invoke_all('user_team_assigned', $data);
+    }
+
+    /**
+     * Emit user_team_unassigned hook.
+     *
+     * @param int $userId
+     * @param int $teamId
+     * @return void
+     *
+     * @since 1.5.0
+     */
+    public function emitUserTeamUnassigned(int $userId, int $teamId): void
+    {
+        $data = [
+            'user_id' => $userId,
+            'team_id' => $teamId,
+            'entity_type' => 'team',
+            'entity_id' => 'team_' . $teamId,
+        ];
+
+        hook_invoke_all('user_team_unassigned', $data);
+    }
 }
