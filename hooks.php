@@ -152,20 +152,6 @@ class hooks_ksf_FA_Teams extends hooks {
             error_log('KSF Teams: composer install exception: ' . $e->getMessage());
         }
     }
-        
-        $composer_path = $module_dir . '/composer.json';
-        if (!file_exists($composer_path)) {
-            return;
-        }
-        
-        chdir($module_dir);
-        $output = array();
-        $return_code = 0;
-        exec('composer install --no-interaction --prefer-dist 2>&1', $output, $return_code);
-        if ($return_code !== 0) {
-            error_log('KSF Module: composer install failed: ' . implode("\n", $output));
-        }
-    }
 
     /**
      * Emit team_created hook for GPG key management.
