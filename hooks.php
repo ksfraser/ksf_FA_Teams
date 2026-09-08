@@ -112,17 +112,6 @@ class hooks_ksf_FA_Teams extends hooks {
         
         return true;
     }
-    function deactivate_extension($company, $check_only=true) {
-        if (!$check_only) {
-            // Unregister any team-related contact types if registered
-            if (class_exists('\\ksfraser\\FrontAccounting\\Common\\ContactType\\ContactTypeRegistry')) {
-                \ksfraser\FrontAccounting\Common\ContactType\ContactTypeRegistry::unregisterModule('ksf_FA_Teams');
-            }
-        }
-        return true;
-    }
-
-
     /**
      * Install composer dependencies if needed
      */
