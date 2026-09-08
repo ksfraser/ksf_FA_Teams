@@ -50,8 +50,14 @@ class hooks_ksf_FA_Teams extends hooks {
      * @return application|null New tab application instance or nothing
      */
     function install_tabs($app) {
-        // Override in modules that add apps
-        // return new ksf_FA_Teams_app();
+        set_ext_domain('modules/ksf_FA_Teams');
+        if (class_exists('application')) {
+            $tab = new application('teams_app', 'Teams');
+            $tab->set_title('Teams');
+            $tab->set_icon('group');
+            return $tab;
+        }
+        return null;
     }
 
     /**
