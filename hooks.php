@@ -30,7 +30,7 @@ define('SS_ksf_FA_Teams', 138 << 8);
 
 // Shared utility: ensure Composer dependencies are installed (runs once).
 // Per AGENTS.md standard; safe non-fatal load (try/catch in ensure_composer_dependencies).
-$composerDepsPath = dirname(__DIR__) . '/ksf_FA_Common/src/Utils/ComposerDependencies.php';
+$composerDepsPath = __DIR__ . '/src/Utils/ComposerDependencies.php';
 if (file_exists($composerDepsPath)) {
     require_once $composerDepsPath;
     \ksfraser\FrontAccounting\Common\Utils\ComposerDependencies::ensure(__DIR__);
