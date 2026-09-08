@@ -211,7 +211,7 @@ class hooks_ksf_FA_Teams extends hooks {
         // Team module can create default team for new project
         // No-op by default; override if team auto-creation needed
     }
-\n    public function emitTeamCreated(int $teamId, string $teamName, string $teamEmail = ''): void
+    public function emitTeamCreated(int $teamId, string $teamName, string $teamEmail = ''): void
     {
         $data = [
             'entity_type' => 'team',
