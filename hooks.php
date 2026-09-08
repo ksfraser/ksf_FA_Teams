@@ -38,7 +38,7 @@ if (file_exists($composerDepsPath)) {
 
 class hooks_ksf_FA_Teams extends hooks {
     var $module_name = 'ksf_FA_Teams';
-    var $version = '1.0.0';
+    var $version     = '2.4.3-0';
 
     /**
      * Add module tab
