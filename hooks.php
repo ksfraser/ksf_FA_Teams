@@ -164,31 +164,8 @@ class hooks_ksf_FA_Teams extends hooks {
      * @since 1.5.0
      */
 
-    // -------------------------------------------------------------------------
-    // Inter-Module Hook Events — called by hook_invoke_first / hook_invoke_all
-    // -------------------------------------------------------------------------
-
-    function respondToCapabilityRequest(&$data, $opts = null) {
-        $request = isset($opts['request']) ? $opts['request'] : (isset($data['request']) ? $data['request'] : 'capabilities');
-        $data['request'] = $request;
-        $data['module'] = $this->module_name;
-        switch ($request) {
-            case 'capabilities':
-                return $this->getModuleCapabilities($data, $opts);
-            case 'constants':
-                return $this->getModuleConstants($data, $opts);
-            case 'has:team_management':
-            case 'has:team_crud':
-                return $this->hasCapability($data, array('capability' => 'team_management'));
-            default:
-                $data['error'] = 'Unknown request: ' . $request;
-                return null;
-        }
-    }
-
-    /**
-     * Team event dispatcher — listens to team lifecycle events from Project module.
-     */
+    // Minimal event dispatcher — only responds to team lifecycle events
+    // No capability negotiation, no user/project event responses (reduces framework interaction)
     function hook_invoke_all($hook, &$data) {
         switch ($hook) {
             case 'team_created':
@@ -196,38 +173,12 @@ class hooks_ksf_FA_Teams extends hooks {
             case 'team_deleted':
             case 'user_team_assigned':
             case 'user_team_unassigned':
-                // These events are emitted by this module (not consumed here)
-                return null;
-            case 'user_provisioned':
-            case 'user_updated':
-            case 'user_deactivated':
-                // Consume RBAC user events for team synchronization
-                $this->handleUserEvent($hook, $data);
-                return null;
-            case 'project_template_applied':
-                // Consume Project module event; create team reference if needed
-                $this->handleProjectTemplateApplied($data);
-                return null;
+                return null;  // Events emitted by this module; no external consumption
             default:
                 return null;
         }
     }
 
-    private function handleUserEvent(string $hook, array &$data): void {
-        $entityType = $data['entity_type'] ?? 'user';
-        $entityId = $data['entity_id'] ?? null;
-        $userId = $data['user_id'] ?? null;
-        // Team module can respond to user events (e.g., sync team membership)
-        // No-op by default; override for team synchronization logic
-    }
-
-    private function handleProjectTemplateApplied(array &$data): void {
-        $templateId = $data['template_id'] ?? null;
-        $projectId = $data['project_id'] ?? null;
-        $teamName = $data['project_name'] ?? ($data['team_name'] ?? 'Project Team');
-        // Team module can create default team for new project
-        // No-op by default; override if team auto-creation needed
-    }
     public function emitTeamCreated(int $teamId, string $teamName, string $teamEmail = ''): void
     {
         $data = [
